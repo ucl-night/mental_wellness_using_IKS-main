@@ -65,50 +65,93 @@ export function BreathingAnimation({ onComplete, duration = 60 }: BreathingAnima
     }
   }, [isComplete, onComplete])
 
+  const totalCycles = Math.max(1, Math.ceil(duration / 9))
+  const currentCycle = Math.min(totalCycles, totalCycles - Math.floor((timeRemaining - 1) / 9))
+  const progress = duration > 0 ? 1 - timeRemaining / duration : 0
+
   return (
-    <div className="flex flex-col items-center justify-center">
-      <div className="mb-6 text-center">
-        <div className="text-3xl font-bold text-emerald-700 mb-2">
-          {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, "0")}
+    <div className="flex flex-col items-center justify-center w-full min-h-[600px] bg-[#F8F9FF] rounded-3xl relative font-sans overflow-hidden">
+      {/* SVASTYA Title */}
+      <div className="absolute top-12 left-0 right-0 text-center">
+        <h1 className="text-sm tracking-[0.5em] text-[#3B3F70] font-medium uppercase">
+          Svastya
+        </h1>
+      </div>
+
+      {/* Main Content Container */}
+      <div className="relative flex flex-col items-center justify-center mt-8">
+        {/* Progress Arc */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] pointer-events-none z-10">
+          <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+            <circle
+              cx="50"
+              cy="50"
+              r="48"
+              fill="none"
+              stroke="#6B7BF5"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeDasharray="301.59"
+              strokeDashoffset={301.59 - (301.59 * progress)}
+              className="transition-all duration-1000 ease-linear"
+            />
+            <g className="transition-transform duration-1000 ease-linear origin-center" style={{ transform: `rotate(${360 * progress}deg)` }}>
+              <circle cx="98" cy="50" r="2.5" fill="#6B7BF5" />
+            </g>
+          </svg>
         </div>
-        <p className="text-sm text-slate-600">Take this time to breathe and center yourself</p>
+
+        {/* Breathing Circle Container */}
+        <div className="relative flex items-center justify-center w-72 h-72">
+          {/* Outer glow layer */}
+          <div
+            className={`absolute inset-0 rounded-full bg-[#7A8CFF] blur-[35px] opacity-40 transition-transform duration-4000 ease-in-out ${isInhaling ? "scale-125" : "scale-90"
+              }`}
+          />
+          {/* Middle layer */}
+          <div
+            className={`absolute inset-3 rounded-full bg-gradient-to-br from-[#A6B6FF] to-[#5A6EF6] opacity-80 backdrop-blur-md transition-transform duration-4000 ease-in-out ${isInhaling ? "scale-110" : "scale-95"
+              }`}
+          />
+          {/* Inner Layer */}
+          <div
+            className={`absolute inset-6 rounded-full bg-gradient-to-br from-[#8599FF] to-[#4659F5] shadow-[inset_0_0_50px_rgba(255,255,255,0.4)] transition-transform duration-4000 ease-in-out ${isInhaling ? "scale-105" : "scale-100"
+              }`}
+          />
+
+          {/* Non-scaling Text Container */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+            <div className={`transition-opacity duration-500 flex flex-col items-center text-center text-white ${showText ? "opacity-100" : "opacity-0"}`}>
+              <div className="text-[38px] font-normal tracking-wide mb-1 drop-shadow-sm">
+                {isInhaling ? "Inhale" : "Exhale"}
+              </div>
+              <div className="text-[14px] font-light text-white/90 max-w-[160px] leading-snug drop-shadow-sm">
+                {isInhaling ? "Breathe in slowly and deeply" : "Breathe out slowly and completely"}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Breathing Circle */}
-      <div className="relative">
-        <div
-          className={`w-32 h-32 rounded-full bg-gradient-to-br from-emerald-300 to-emerald-500 opacity-30 transition-all duration-4000 ease-in-out ${
-            isInhaling ? "scale-150" : "scale-100"
-          }`}
-        />
-        <div
-          className={`absolute inset-4 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 opacity-50 transition-all duration-4000 ease-in-out ${
-            isInhaling ? "scale-125" : "scale-100"
-          }`}
-        />
-        <div
-          className={`absolute inset-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 transition-all duration-4000 ease-in-out ${
-            isInhaling ? "scale-110" : "scale-100"
-          }`}
-        />
-      </div>
-
-      {/* Breathing Text */}
-      <div className="mt-8 h-8 flex items-center justify-center">
-        {showText && (
-          <p
-            className={`text-lg font-medium transition-opacity duration-500 ${
-              isInhaling ? "text-emerald-700" : "text-emerald-600"
-            }`}
-          >
-            {isInhaling ? "Breathe In..." : "Breathe Out..."}
-          </p>
-        )}
+      {/* Cycle Indicator */}
+      <div className="mt-20 flex flex-col items-center space-y-4 z-20">
+        <div className="text-[#3B3F70] font-medium text-[15px]">
+          Cycle {currentCycle} of {totalCycles}
+        </div>
+        <div className="flex items-center space-x-3">
+          {Array.from({ length: totalCycles }).map((_, i) => (
+            <div
+              key={i}
+              className={`w-2.5 h-2.5 rounded-full transition-colors duration-500 ${i < currentCycle ? "bg-[#6B7BF5]" : "bg-[#D1D5FC]"
+                }`}
+            />
+          ))}
+        </div>
       </div>
 
       {isComplete && (
-        <div className="mt-8">
-          <Button onClick={onComplete} className="bg-emerald-600 hover:bg-emerald-700 px-8 py-3 text-lg">
+        <div className="absolute bottom-8 z-30">
+          <Button onClick={onComplete} className="bg-[#6B7BF5] hover:bg-[#5A6EF6] text-white rounded-full px-8 py-3 shadow-lg shadow-[#6B7BF5]/30 transition-all">
             Continue
           </Button>
         </div>
